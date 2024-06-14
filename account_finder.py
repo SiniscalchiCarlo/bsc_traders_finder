@@ -229,8 +229,6 @@ def rabbit_hole(start,min_txs,period,start_pair=""):
                 print("History of:", wallet)
                 done_wallets["done"].append(wallet)
                 gains,capital,trades_by_pair=get_address_trades(wallet,start,min_txs) #PROVARE A CAMBIARE CON TOKENTX
-                plt.plot(capital)
-                plt.show()
                 if gains!=None:
                     #aggiorno i nuovi pair da anlizzare aggiungendo (se non già presenti) quelli tradati dal wallet analizzato
                     pairs["todo"]+=set(list(trades_by_pair.keys()))-set(pairs["todo"])
