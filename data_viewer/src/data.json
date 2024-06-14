@@ -1,0 +1,22 @@
+{
+    "data": [
+        {
+          "ID": "1",
+          "Trader": "John Doe",
+          "Result": "Win",
+          "Value": 500
+        },
+        {
+          "ID": "2",
+          "Trader": "John Doe",
+          "Result": "Win",
+          "Value": 800
+        },
+        {
+          "ID": "3",
+          "Trader": "John Doe",
+          "Result": "Win",
+          "Value": 400
+        }
+      ]
+}
