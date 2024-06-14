@@ -6,6 +6,12 @@ import matplotlib.pyplot as plt
 from eth_abi import decode_abi
 import time
 import random
+import sys
+
+
+apiKey="UD3VYUKCWS42FIIMU82XAZQADYYJZE7M8R"
+w3 = Web3(Web3.HTTPProvider('https://bsc-dataseed.binance.org/'))
+w3.middleware_onion.inject(geth_poa_middleware, layer=0)
 
 def get_res(url):
     res=requests.get(url)
@@ -143,11 +149,11 @@ def get_address_trades(address,start,min_txs):
     return gains, capital, trades_by_pair
 
 def update_data(pairs,done_wallets,traders):
-    with open('pairs.json', 'w') as f:
+    with open('data/pairs.json', 'w') as f:
         json.dump(pairs, f)
-    with open('wallets.json', 'w') as f:
+    with open('data/wallets.json', 'w') as f:
         json.dump(done_wallets, f)
-    with open('traders.json', 'w') as f:
+    with open('data/traders.json', 'w') as f:
         json.dump(traders, f)
 
 
@@ -211,11 +217,11 @@ def rabbit_hole(start,min_txs,period,start_pair=""):
     #calcolo il numero del blocco di "start" giorni fa
     start=estimate_block_number(start)
 
-    with open('pairs.json',"r") as f:
+    with open('data/pairs.json',"r+") as f:
         pairs=json.load(f)
-    with open('wallets.json',"r") as f:
+    with open('data/wallets.json',"r") as f:
         done_wallets=json.load(f)
-    with open('traders.json',"r") as f:
+    with open('data/traders.json',"r") as f:
         traders=json.load(f)
     # se il non ci sono pair salvati, allora crea una lista contenente il pair iniziale in modo che inizi da quello
     if pairs["todo"]==[]:
@@ -258,12 +264,6 @@ def rabbit_hole(start,min_txs,period,start_pair=""):
         print("     got %s new wallets."%(len(wallets)))
 
 
-
-apiKey="UD3VYUKCWS42FIIMU82XAZQADYYJZE7M8R"
-w3 = Web3(Web3.HTTPProvider('https://bsc-dataseed.binance.org/'))
-w3.middleware_onion.inject(geth_poa_middleware, layer=0)
-routers=["0x10ED43C718714eb63d5aA57B78B54704E256024E","0x1A0A18AC4BECDDbd6389559687d1A73d8927E416"]
-pancake_factory=create_contract('0xBCfCcbde45cE874adCB698cC183deBcF17952812')
 rabbit_hole(60,100,60,"0xdde0a4A7c05636228349eECF1F1208eB0c63554C")
 
 
