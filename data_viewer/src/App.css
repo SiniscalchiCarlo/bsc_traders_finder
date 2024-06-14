@@ -1,0 +1,54 @@
+body {
+    background-color: rgb(43, 43, 43);
+    color: white;
+    font-family: "Segoe UI", Arial, sans-serif;
+    margin: 20px;
+}
+
+table { 
+    border-collapse: collapse; 
+    width: 100%;
+}
+
+.table-header {
+    background-color: rgb(65, 65, 65);
+    
+    th {
+        padding-top: 15px;
+        padding-bottom: 15px;
+        border-collapse: collapse;
+        padding-left: 10px;
+    }
+}
+
+th {
+    text-align: start;
+}
+
+.table-row {
+    border-bottom: 1px solid white;
+
+    td {
+        padding-top: 15px;
+        padding-bottom: 15px;
+        border-collapse: collapse; 
+        padding-left: 10px;
+    }
+}
+
+.controls-row {
+    margin-bottom: 20px;
+    margin-top: 20px;
+    display: flex;
+    gap: 40px;
+}
+
+.form-select {
+    height: 27.5px;
+    width: 100px;
+    outline: none;
+    background-color: rgb(35, 35, 35);
+    border: 1px solid rgb(65, 65, 65);
+    color: white;
+    border-radius: 5px;
+}
