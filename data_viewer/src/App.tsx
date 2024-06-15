@@ -2,7 +2,7 @@ import './App.css';
 import Form from 'react-bootstrap/Form';
 import React, { useState } from 'react';
 import json from './data.json';
-import { CartesianGrid, Legend, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
+import { Line, LineChart, ResponsiveContainer } from 'recharts';
 import { Trader, Traders } from './types/trader.interface';
 import ChartModal from './chart-modal/chart-modal';
 
