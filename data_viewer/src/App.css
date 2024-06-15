@@ -8,6 +8,7 @@ body {
 table { 
     border-collapse: collapse; 
     width: 100%;
+    text-align: start;
 }
 
 .table-header {
@@ -18,11 +19,8 @@ table {
         padding-bottom: 15px;
         border-collapse: collapse;
         padding-left: 10px;
+        text-align: start;
     }
-}
-
-th {
-    text-align: start;
 }
 
 .table-row {
@@ -51,4 +49,18 @@ th {
     border: 1px solid rgb(65, 65, 65);
     color: white;
     border-radius: 5px;
+}
+
+.default-button {
+    background-color: rgb(101, 90, 253);
+    outline: none;
+    border: none;
+    color: white;
+    border-radius: 10px;
+    padding: 10px;
+    cursor: pointer;
+}
+
+.default-button:hover {
+    background-color: rgb(125, 186, 255);
 }

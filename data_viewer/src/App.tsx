@@ -1,19 +1,22 @@
 import './App.css';
 import Form from 'react-bootstrap/Form';
-import React from 'react';
+import React, { useState } from 'react';
 import json from './data.json';
 import { CartesianGrid, Legend, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { Trader, Traders } from './types/trader.interface';
+import ChartModal from './chart-modal/chart-modal';
 
 export default function App() {
 
   const data: Traders = json;
 
-  const columns: (keyof Trader)[] = ["address", "wins_percentage", "avg_perc_gain", "avg_ntrades_per_token", "capital"];
+  const columns: ((keyof Trader) | 'open-chart')[] = ["address", "wins_percentage", "avg_perc_gain", "avg_ntrades_per_token", "capital", 'open-chart'];
 
   const [orderBy, setOrderBy] = React.useState<string>(columns[0]);
 
   const [orderDirection, setOrderDirection] = React.useState<string>("asc");
+
+  const [selectedTrader, setSelectedTrader] = useState<Trader | undefined>(undefined);
 
   const onChangeOrder = (e: any) => {
     setOrderBy(e.target.value);
@@ -82,7 +85,17 @@ export default function App() {
                                   </LineChart>
                                 </ResponsiveContainer>
                               </div>
-                          </td>
+                            </td>
+                          );
+                        }
+                        else if(column === 'open-chart') {
+                          return (
+                            <td>
+                              <button 
+                                className='default-button'
+                                onClick={() => setSelectedTrader(row)}
+                              >Open chart</button>
+                            </td>
                           );
                         }
                         else {
@@ -96,6 +109,10 @@ export default function App() {
           }
         </tbody>
       </table>
+
+      {
+        selectedTrader && <ChartModal data={selectedTrader} closeModal={() => setSelectedTrader(undefined)}></ChartModal>
+      }
     </>
   );
 }
