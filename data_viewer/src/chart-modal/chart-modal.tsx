@@ -1,4 +1,4 @@
-import { Line, LineChart, ResponsiveContainer } from "recharts";
+import { CartesianGrid, Legend, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { Trader } from "../types/trader.interface";
 import './chart-modal.css';
 
@@ -22,14 +22,14 @@ export default function ChartModal({
                   'capital_part' : value,
                 }
               })}>
-                  {/* <CartesianGrid />
-                  <XAxis dataKey="name" interval={"preserveStartEnd"} />
+                  <CartesianGrid />
+                  {/* <XAxis dataKey="name" interval={"preserveStartEnd"} /> */}
                   <YAxis></YAxis>
                   <Legend />
-                  <Tooltip /> */}
+                  <Tooltip />
                   <Line
                     dataKey="capital_part"
-                    stroke="yellow"
+                    stroke="black"
                     activeDot={{ r: 8 }}
                     dot={false}
                   />
