@@ -1,18 +1,22 @@
 import './App.css';
 import Form from 'react-bootstrap/Form';
-import React from 'react';
+import React, { useState } from 'react';
 import json from './data.json';
-import { CartesianGrid, Legend, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
+import { Line, LineChart, ResponsiveContainer } from 'recharts';
+import { Trader, Traders } from './types/trader.interface';
+import ChartModal from './chart-modal/chart-modal';
 
 export default function App() {
 
-  const data = json.data;
+  const data: Traders = json;
 
-  const columns: string[] = ["ID", "Trader", "Result", "Value", "chart"];
+  const columns: ((keyof Trader) | 'open-chart')[] = ["address", "wins_percentage", "avg_perc_gain", "avg_ntrades_per_token", "capital", 'open-chart'];
 
   const [orderBy, setOrderBy] = React.useState<string>(columns[0]);
 
   const [orderDirection, setOrderDirection] = React.useState<string>("asc");
+
+  const [selectedTrader, setSelectedTrader] = useState<Trader | undefined>(undefined);
 
   const onChangeOrder = (e: any) => {
     setOrderBy(e.target.value);
@@ -21,35 +25,6 @@ export default function App() {
   const onChangeOrderDirection = (e: any) => {
     setOrderDirection(e.target.value);
   };
-
-  // Sample chart data
-  const pdata = [
-    {
-        name: "MongoDb",
-        student: 11,
-    },
-    {
-        name: "Javascript",
-        student: 15,
-    },
-    {
-        name: "PHP",
-        student: 5,
-    },
-    {
-        name: "Java",
-        student: 10,
-    },
-    {
-        name: "C#",
-        student: 9,
-    },
-    {
-        name: "C++",
-        student: 10,
-    },
-  ];
-
 
   return (
     <>
@@ -78,27 +53,31 @@ export default function App() {
         </thead>
         <tbody>
           {
-            data
+            data.data
               .sort((a: any, b: any) => (a[orderBy] > b[orderBy]) ? -1 * (orderDirection === 'asc' ? 1 : -1) : 1 * (orderDirection === 'asc' ? 1 : -1))
               .reverse()
-              .map((row: any) => {
+              .map((row: Trader) => {
                 return (
                   <tr className="table-row">
                     {
                       columns.map((column: string) => {
-                        if(column === 'chart') {
+                        if(column === 'capital') {
                           return (
                             <td>
                               <div style={{ width: '100px'}}>
                                 <ResponsiveContainer width='100%' height='100%' aspect={4}>
-                                  <LineChart data={pdata}>
+                                  <LineChart data={row.capital.map((value: number) => {
+                                    return {
+                                      'capital_part' : value,
+                                    }
+                                  })}>
                                       {/* <CartesianGrid />
                                       <XAxis dataKey="name" interval={"preserveStartEnd"} />
                                       <YAxis></YAxis>
                                       <Legend />
                                       <Tooltip /> */}
                                       <Line
-                                        dataKey="student"
+                                        dataKey="capital_part"
                                         stroke="yellow"
                                         activeDot={{ r: 8 }}
                                         dot={false}
@@ -106,11 +85,21 @@ export default function App() {
                                   </LineChart>
                                 </ResponsiveContainer>
                               </div>
-                          </td>
+                            </td>
+                          );
+                        }
+                        else if(column === 'open-chart') {
+                          return (
+                            <td>
+                              <button 
+                                className='default-button'
+                                onClick={() => setSelectedTrader(row)}
+                              >Open chart</button>
+                            </td>
                           );
                         }
                         else {
-                          return <td>{row[column]}</td>;
+                          return <td>{(row as any)[column]}</td>;
                         }
                       })
                     }
@@ -120,6 +109,10 @@ export default function App() {
           }
         </tbody>
       </table>
+
+      {
+        selectedTrader && <ChartModal data={selectedTrader} closeModal={() => setSelectedTrader(undefined)}></ChartModal>
+      }
     </>
   );
 }
