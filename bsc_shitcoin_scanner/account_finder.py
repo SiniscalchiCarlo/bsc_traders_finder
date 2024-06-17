@@ -6,10 +6,12 @@ import matplotlib.pyplot as plt
 from eth_abi import decode_abi
 import time
 import random
-import sys
+from dotenv import load_dotenv
+import os
 
+load_dotenv()
 
-apiKey="UD3VYUKCWS42FIIMU82XAZQADYYJZE7M8R"
+apiKey=os.getenv('BSC_API_KEY')
 w3 = Web3(Web3.HTTPProvider('https://bsc-dataseed.binance.org/'))
 w3.middleware_onion.inject(geth_poa_middleware, layer=0)
 
