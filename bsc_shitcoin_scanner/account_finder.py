@@ -8,83 +8,15 @@ import time
 import random
 from dotenv import load_dotenv
 import os
-
+from bsc_lib import bscScanner
 load_dotenv()
 
-apiKey=os.getenv('BSC_API_KEY')
-w3 = Web3(Web3.HTTPProvider('https://bsc-dataseed.binance.org/'))
+api_key=os.getenv('BSC_API_KEY')
+http_provider='https://bsc-dataseed.binance.org/'
+BS=bscScanner(api_key,http_provider)
+w3 = Web3(Web3.HTTPProvider(http_provider))
 w3.middleware_onion.inject(geth_poa_middleware, layer=0)
 
-def get_res(url):
-    res=requests.get(url)
-    res=json.loads(res.text)["result"]
-    return res
-
-def get_tokentxs(address,sort,start,end):
-    #restituisce una lista con le transazioni a partire dalla prima considera le transazioni dopo un certo periodo a partire dalla prima
-    TotRes=[]
-    
-    res=requests.get(f'https://api.bscscan.com/api?module=account&action=tokentx&address={address}&startblock={start}&endblock={end}&sort={sort}&apikey={apiKey}')
-    res=json.loads(res.text)
-    res=res['result']
-    
-    last_block=None
-    if len(res)==10000:
-        last_block=res[-1]["blockNumber"]
-    return res, last_block
-
-def get_abi(address):
-    url = f"https://api.bscscan.com/api?module=contract&action=getabi&address={address}&apikey={apiKey}"
-    res=get_res(url)
-    abi=json.loads(res)
-    return abi
-
-def create_contract(address):
-    abi=get_abi(address)
-    contract = w3.eth.contract(address=w3.toChecksumAddress(address), abi=abi)
-    return contract
-
-def get_tokens_values(contract,data):
-    amount0In,amount1In,amount0Out,amount1Out=data
-    if amount0In!=0:
-        t0=amount0In
-        t1=-amount1Out
-    else:
-        t0=-amount0Out
-        t1=amount1In
-
-    token0=contract.functions.token0().call()
-    token1=contract.functions.token1().call()
-    if token0=="0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c":
-        return t0/10**18
-    if token1=="0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c":
-        return t1/10**18
-    return None
-
-def get_swap(tx_hash):
-    #prendo i log della transazione
-    transaction_receipt = w3.eth.getTransactionReceipt(tx_hash)
-    logs=transaction_receipt["logs"]
-    trades=[]
-    warning=None
-    print("     %s logs"%len(logs))
-    if len(logs)<100:
-        for log in logs:
-                
-                #cerco i log che corrispondono ad uno swap
-                topic0=w3.toHex(log["topics"][0])
-                if topic0=="0xd78ad95fa46c994b6551d0da85fc275fe613ce37657fb8d5e3d130840159d822":
-                    pair_address=log["address"]
-                    #ricreo il contratto e decodifico i dati dello swap
-                    pair_contract=create_contract(pair_address)
-                    decoded_data = decode_abi(['uint256', 'uint256', 'uint256','uint256'], bytes.fromhex(log["data"][2:]))
-                    #estraggo la quantit' ricevuti o ceduti
-                    value=get_tokens_values(pair_contract,decoded_data)
-                    if value!=None:
-                        trades.append({"value":value,"pair":pair_address,"block":log["blockNumber"]})    
-    else:
-        warning="too many logs"
-    return trades,warning
 
 def get_stats(capital,gains,trades_by_pair):
     #biggest drawdow,sharpe ratio,%gain, %avg position, avg numer of trades per token
@@ -112,7 +44,7 @@ def get_stats(capital,gains,trades_by_pair):
 
 def get_address_trades(address,start,min_txs):
     #prendo le transazioni fatte dal wallet che volevo analizzare
-    txs,_=get_tokentxs(address,"asc",start,"latest")
+    txs,_=BS.get_tokentxs(address,"asc",start,"latest")
     
     if len(txs)<min_txs:
         return None,None,None
@@ -133,17 +65,17 @@ def get_address_trades(address,start,min_txs):
         i+=1
         if tx_hash not in done_txs:
             done_txs.append(tx_hash)
-            trades,warning=get_swap(tx_hash) #prende le informazioni relative allo swap, come quantint' di token scambiati, e address del pair
+            trades,warning=BS.swaps_from_hash(tx_hash) #prende le informazioni relative allo swap, come quantint' di token scambiati, e address del pair
             #nel caso ci siano transazioni con troppi log viene segnalato
             if warning!=None:
                 warnings.append(warning)
             #aggiorno con i dati 
             for trade in trades:
-                capital.append(capital[-1]+trade["value"])
+                capital.append(capital[-1]+trade["wbnb_val"])
                 pair_address=trade["pair"]
                 if pair_address not in trades_by_pair:
                     trades_by_pair[pair_address]={"values":[],"blocks":[]}
-                trades_by_pair[pair_address]["values"].append(trade["value"])
+                trades_by_pair[pair_address]["values"].append(trade["wbnb_val"])
                 trades_by_pair[pair_address]["blocks"].append(trade["block"])
     #calcolo il guadagno effettivo effettuato tradando un token e lo aggiungo alla lista gains      
     for pair in trades_by_pair:
@@ -159,22 +91,14 @@ def update_data(pairs,done_wallets,traders):
         json.dump(traders, f)
 
 
-def estimate_block_number(days_ago):
-    average_block_time_seconds = 3 
-    seconds_per_day = 86400
-    blocks_per_day = seconds_per_day / average_block_time_seconds
-    blocks_ago = int(days_ago * blocks_per_day)
-    current_block_number = w3.eth.block_number
-    return current_block_number - blocks_ago
-
 def swaps_by_pair(pair,period,max_swaps):
     if isinstance(pair,dict):
         pair_address=pair["pair"]
     else:
         pair_address=pair
-    cotract=create_contract(pair_address)
+    cotract=BS.create_contract(pair_address)
     #prendo le prime transazioni per vedere in che blocco è stata fatta la prima transazione sul pair, in modo da incominciare a cercare gli swap da quel blocco
-    txs,_=get_tokentxs(pair_address,"asc",0,"latest")
+    txs,_=BS.get_tokentxs(pair_address,"asc",0,"latest")
     first_swap_time=int(txs[0]["timeStamp"])
     first_swap_block=int(txs[0]["blockNumber"])
     last_block=int(txs[-1]["blockNumber"])
@@ -217,7 +141,7 @@ def new_wallets_by_pair(pair,period,max_swaps):
     
 def rabbit_hole(start,min_txs,period,start_pair=""):
     #calcolo il numero del blocco di "start" giorni fa
-    start=estimate_block_number(start)
+    start=BS.estimate_block_number(start)
 
     with open('data/pairs.json',"r+") as f:
         pairs=json.load(f)
@@ -246,6 +170,8 @@ def rabbit_hole(start,min_txs,period,start_pair=""):
                     #salvo i dati ogni X wallet trovati
                     found+=1
                     if found==1:
+                        plt.plot(capital)
+                        plt.show()
                         print("Saving data...")
                         found=0
                         update_data(pairs,done_wallets,traders)
