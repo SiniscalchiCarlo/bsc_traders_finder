@@ -97,15 +97,40 @@ class bscScanner:
         current_block_number = self.w3.eth.block_number
         return current_block_number - blocks_ago 
 
-class bscTrading:
-    def __init__(self,my_wallet,copy_wallet, api_key, http_provider):
+class bscCopy:
+    def __init__(self,my_wallet,copy_wallets, api_key, http_provider):
         self.api_key = api_key
         self.w3 = Web3(Web3.HTTPProvider(http_provider))
         self.my_wallet=my_wallet
-        self.copy_wallet=copy_wallet
-        self.routerV2="0x10ED43C718714eb63d5aA57B78B54704E256024E"
+        self.copy_wallets=copy_wallets
+        
 
     def copy(self):
-        print(f"Listening for swaps by {self.copy_wallet}")
-        block_filter = self.eth.filter({'fromBlock': 'latest', 'address': self.routerV2, 'topics':["0xd78ad95fa46c994b6551d0da85fc275fe613ce37657fb8d5e3d130840159d822",self.copy_wallet]})
-       
+        swap_signature="0xd78ad95fa46c994b6551d0da85fc275fe613ce37657fb8d5e3d130840159d822"
+
+        w_topics=[]
+        #padding the wallet address to fit it in the topics argument
+        for w in self.copy_wallets:
+            w=w.lower().replace("0x", "")
+            w="0x" + w.zfill(64)
+            w_topics.append(w)
+        #filter when the "sende" is one of the address we want to copy
+        filter_sender=self.w3.eth.filter({'fromBlock': "latest",
+                                    'Topics': [swap_signature,w_topics,None]}) #this array means that the topic0 has to be the swap signature, the topic1 has to be one of the wallet address i want to copytrade, ent the topic2 can be anything
+        
+        #filter when the "to" is one of the address we want to copy
+        filter_to=self.w3.eth.filter({'fromBlock': "latest",
+                                    'Topics': [swap_signature,None,w_topics]}) #this array means that the topic0 has to be the swap signature, the topic1 can be anything, ent the topic2 has to be one of the wallet address i want to copytrade
+        while True:
+            for event in filter_sender.get_new_entries():
+                print(event)
+            for event in filter_sender.get_new_entries():
+                print(event)
+    
+
+
+
+
+
+
+# chidere come capire filtrare le transazioni di una transazione come: https://bscscan.com/tx/0x5102edf3309db0e6d621a03752c4ee222da2283b187125ff4df767f8401c9505#eventlog
