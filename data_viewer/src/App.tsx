@@ -1,22 +1,24 @@
 import './App.css';
 import Form from 'react-bootstrap/Form';
-import React, { useState } from 'react';
-import json from './data.json';
+import React, { useEffect, useState } from 'react';
 import { Line, LineChart, ResponsiveContainer } from 'recharts';
-import { Trader, Traders } from './types/trader.interface';
+import { Data, DataWrapper } from './types/trader.interface';
 import ChartModal from './chart-modal/chart-modal';
+import { deleteData, getData } from './api/data';
 
 export default function App() {
 
-  const data: Traders = json;
+  const [data, setData] = useState<DataWrapper>({
+    data: []
+  });
 
-  const columns: ((keyof Trader) | 'open-chart')[] = ["address", "wins_percentage", "avg_perc_gain", "avg_ntrades_per_token", "capital", 'open-chart'];
+  const columns: ((keyof Data) | 'open-chart' | 'delete')[] = ["address", "wins_percentage", "avg_perc_gain", "avg_ntrades_per_token", "capital", 'open-chart', 'delete'];
 
   const [orderBy, setOrderBy] = React.useState<string>(columns[0]);
 
   const [orderDirection, setOrderDirection] = React.useState<string>("asc");
 
-  const [selectedTrader, setSelectedTrader] = useState<Trader | undefined>(undefined);
+  const [selectedTrader, setSelectedTrader] = useState<Data | undefined>(undefined);
 
   const onChangeOrder = (e: any) => {
     setOrderBy(e.target.value);
@@ -25,6 +27,22 @@ export default function App() {
   const onChangeOrderDirection = (e: any) => {
     setOrderDirection(e.target.value);
   };
+
+  useEffect(() => {
+    updateData();
+  }, []);
+
+  const updateData = () => {
+    getData().then((data: DataWrapper) => {
+      setData(data);
+    });
+  }
+
+  const onDeleteAddress = (data: Data) => {
+    deleteData(data).then(() => {
+      updateData();
+    });
+  }
 
   return (
     <>
@@ -54,9 +72,10 @@ export default function App() {
         <tbody>
           {
             data.data
+              .filter((data: Data) => data.state === 0)
               .sort((a: any, b: any) => (a[orderBy] > b[orderBy]) ? -1 * (orderDirection === 'asc' ? 1 : -1) : 1 * (orderDirection === 'asc' ? 1 : -1))
               .reverse()
-              .map((row: Trader) => {
+              .map((row: Data) => {
                 return (
                   <tr className="table-row">
                     {
@@ -95,6 +114,16 @@ export default function App() {
                                 className='default-button'
                                 onClick={() => setSelectedTrader(row)}
                               >Open chart</button>
+                            </td>
+                          );
+                        }
+                        else if(column === 'delete') {
+                          return (
+                            <td>
+                              <button 
+                                className='default-button delete-button'
+                                onClick={() => onDeleteAddress(row)}
+                              >Delete</button>
                             </td>
                           );
                         }

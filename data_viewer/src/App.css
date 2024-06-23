@@ -64,3 +64,11 @@ table {
 .default-button:hover {
     background-color: rgb(125, 186, 255);
 }
+
+.delete-button {
+    background-color: rgb(255, 53, 17);
+}
+
+.delete-button:hover {
+    background-color: rgb(255, 103, 93);
+}

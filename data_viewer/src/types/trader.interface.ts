@@ -1,8 +1,9 @@
-export interface Traders {
-    data: Trader[];
+export interface DataWrapper {
+    data: Data[];
 }
 
-export interface Trader {
+export interface Data {
+    'state': 0 | 1 | 2;
     'address': string;
     'capital': number[];
     'perc_gains': number[];

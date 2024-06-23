@@ -1,9 +1,9 @@
-import { CartesianGrid, Legend, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
-import { Trader } from "../types/trader.interface";
+import { CartesianGrid, Legend, Line, LineChart, ResponsiveContainer, Tooltip, YAxis } from "recharts";
+import { Data } from "../types/trader.interface";
 import './chart-modal.css';
 
 interface ChartModalProps {
-  data: Trader;
+  data: Data;
   closeModal: Function;
 }
 
