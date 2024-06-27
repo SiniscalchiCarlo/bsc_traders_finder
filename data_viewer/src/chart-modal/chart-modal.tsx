@@ -26,10 +26,10 @@ export default function ChartModal({
                   {/* <XAxis dataKey="name" interval={"preserveStartEnd"} /> */}
                   <YAxis></YAxis>
                   <Legend />
-                  <Tooltip />
+                  <Tooltip contentStyle={{backgroundColor:'black'}}/>
                   <Line
                     dataKey="capital_part"
-                    stroke="black"
+                    stroke="white"
                     activeDot={{ r: 8 }}
                     dot={false}
                   />

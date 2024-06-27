@@ -4,7 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { Line, LineChart, ResponsiveContainer } from 'recharts';
 import { Data, DataWrapper } from './types/trader.interface';
 import ChartModal from './chart-modal/chart-modal';
-import { deleteData, getData } from './api/data';
+import { deleteData, getData, includeData, saveData } from './api/data';
 
 export default function App() {
 
@@ -12,7 +12,7 @@ export default function App() {
     data: []
   });
 
-  const columns: ((keyof Data) | 'open-chart' | 'delete')[] = ["address", "wins_percentage", "avg_perc_gain", "avg_ntrades_per_token", "capital", 'open-chart', 'delete'];
+  const columns: ((keyof Data) | 'open-chart' | 'exclude' | 'save')[] = ["address", "wins_percentage", "avg_perc_gain", "avg_ntrades_per_token", "capital", 'open-chart', 'exclude','save'];
 
   const [orderBy, setOrderBy] = React.useState<string>(columns[0]);
 
@@ -20,12 +20,18 @@ export default function App() {
 
   const [selectedTrader, setSelectedTrader] = useState<Data | undefined>(undefined);
 
+  const [filter, setFilter] = React.useState<number>(0);
+
   const onChangeOrder = (e: any) => {
     setOrderBy(e.target.value);
   };
 
   const onChangeOrderDirection = (e: any) => {
     setOrderDirection(e.target.value);
+  };
+
+  const onChangeFilter = (e: any) => {
+    setFilter(parseInt(e.target.value, 10));
   };
 
   useEffect(() => {
@@ -39,9 +45,40 @@ export default function App() {
   }
 
   const onDeleteAddress = (data: Data) => {
-    deleteData(data).then(() => {
-      updateData();
-    });
+    if(data.state === 2) {
+      includeData(data).then(() => {
+        updateData();
+      });
+    }
+    else {
+      deleteData(data).then(() => {
+        updateData();
+      });
+    }
+  }
+
+  const onSaveAddress = (data: Data) => {
+    if(data.state === 1) {
+      includeData(data).then(() => {
+        updateData();
+      });
+    }
+    else {
+      saveData(data).then((data: DataWrapper) => {
+        updateData();
+      });
+    }
+  }
+
+  const filterData = (data: Data[]) => {
+    if(filter === -1) return data;
+
+    if(filter === 0) {
+      return data.filter((data: Data) => data.state === 0 || data.state === 1);
+    }
+    else {
+      return data.filter((data: Data) => data.state === 1);
+    }
   }
 
   return (
@@ -61,6 +98,15 @@ export default function App() {
             <option>desc</option>
           </Form.Select>
         </div>
+
+        <div>
+          <p>Filter</p>
+          <Form.Select onChange={onChangeFilter} className="form-select">
+            <option value={0}>Default</option>
+            <option value={1}>Only Favorites</option>
+            <option value={-1}>View All</option>
+          </Form.Select>
+        </div>
       </div>
 
       <table>
@@ -71,8 +117,7 @@ export default function App() {
         </thead>
         <tbody>
           {
-            data.data
-              .filter((data: Data) => data.state === 0)
+            filterData(data.data)
               .sort((a: any, b: any) => (a[orderBy] > b[orderBy]) ? -1 * (orderDirection === 'asc' ? 1 : -1) : 1 * (orderDirection === 'asc' ? 1 : -1))
               .reverse()
               .map((row: Data) => {
@@ -117,13 +162,23 @@ export default function App() {
                             </td>
                           );
                         }
-                        else if(column === 'delete') {
+                        else if(column === 'exclude') {
                           return (
                             <td>
                               <button 
                                 className='default-button delete-button'
                                 onClick={() => onDeleteAddress(row)}
-                              >Delete</button>
+                              >{row.state === 2 ? 'Include' : 'Exclude'}</button>
+                            </td>
+                          );
+                        }
+                        else if(column === 'save') {
+                          return (
+                            <td>
+                              <button 
+                                className='default-button favorite-button'
+                                onClick={() => onSaveAddress(row)}
+                              >{row.state === 1 ? 'Remove from favorites' : 'Add to favorites'}</button>
                             </td>
                           );
                         }

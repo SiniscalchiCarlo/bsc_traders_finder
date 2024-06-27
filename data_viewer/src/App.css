@@ -72,3 +72,11 @@ table {
 .delete-button:hover {
     background-color: rgb(255, 103, 93);
 }
+
+.favorite-button {
+    background-color: rgb(35, 167, 2);
+}
+
+.favorite-button:hover {
+    background-color: rgb(71, 236, 99);
+}
